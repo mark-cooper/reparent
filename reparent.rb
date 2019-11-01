@@ -47,8 +47,11 @@ parents_child_position = Hash.new(0)
 DB[:archival_object].where(
   root_record_id: reparent[:root_record_id],
   parent_name: reparent[:parent_name]
-).each do |child|
-  child.update(title: "#{child[:title]}???") unless child[:title].length >= 3
+).order(:title).each do |child|
+  unless child[:title].length >= 3
+    child.update(title: "#{child[:title]}???")
+    DB[:archival_object].where(id: child[:id]).update(title: child[:title])
+  end
 
   title = child[:title][0..2]
   ref_id = Digest::SHA1.hexdigest(title)
@@ -78,6 +81,9 @@ DB[:archival_object].where(
     position: parents_child_position[title],
     system_mtime: Time.now
   )
+  DB[:archival_object].where(id: child[:id]).update(
+    child.slice(:parent_id, :parent_name, :position, :system_mtime)
+  )
   puts "Updated: [#{parents[title][:id]}, #{title}, #{parents[title][:position]}] [#{child[:id]}, #{child[:title]}, #{child[:position]}]"
   parents_child_position[title] += 500
 end
@@ -93,7 +99,7 @@ DB[:archival_object].where(
   position = parents[title][:position] - starting_position
   next unless position > 0
 
-  parents[title].update(
+  DB[:archival_object].where(id: child[:id]).update(
     position: position,
     system_mtime: Time.now
   )
