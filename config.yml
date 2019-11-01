@@ -1,0 +1,12 @@
+---
+db:
+  host: 127.0.0.1
+  port: 3306
+  database: archivesspace
+  user: as
+  password: as123
+reparent:
+  root_record_id: 8879
+  parent_id: 788927
+  parent_name: 788927@archival_object
+  level_id: 898
